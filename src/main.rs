@@ -10,9 +10,34 @@ use futures::channel::mpsc;
 
 type Result<T> = std::result::Result<T, Rejection>;
 
-pub async fn client_connection(ws: WebSocket) {
+pub async fn client_connection(ws: WebSocket)  {
     let (client_ws_sender, mut client_ws_rcv) = ws.split();
+    
+    let mut stream = TcpStream::connect("127.0.0.1:1984").await.unwrap();
+    let (mut byte_rx, mut byte_tx) = stream.into_split();
+    
     let (client_sender, client_rcv) = mpsc::unbounded();
+    
+    // check for new messages from Bite
+    tokio::task::spawn(async move { 
+        loop {
+            let mut b2 = [0; 100];
+            byte_rx.readable().await;
+
+            //Saves bite's response on b2 buffer
+            let p = byte_rx.try_read(&mut b2);
+            
+            match p {
+                Ok(_i) => {
+                    let s = String::from_utf8_lossy(&b2);
+                    client_sender.unbounded_send(Ok(Message::text(s)));
+                },
+                Err(e) => continue,
+            };
+    
+        }
+
+    });
 
     tokio::task::spawn(client_rcv.forward(client_ws_sender).map(|result| {
         if let Err(e) = result {
@@ -21,8 +46,9 @@ pub async fn client_connection(ws: WebSocket) {
     }));
 
     println!("{}", "connected");
-
+    // Check for new messages from the Client
     while let Some(result) = client_ws_rcv.next().await {
+        let b2 = [0; 100];
         let msg = match result {
             Ok(msg) => msg,
             Err(e) => {
@@ -30,11 +56,11 @@ pub async fn client_connection(ws: WebSocket) {
                 break;
             }
         };
-        println!("{:?}", msg);
-        client_sender.unbounded_send(Ok(Message::text("patito")));
-        // client_msg(&id, msg, &clients).await;
+        //write to bite 
+        byte_tx.writable().await;
+        let n = byte_tx.try_write(&msg.into_bytes()).unwrap();
     }
-
+ 
     //disconnects user 
     println!("{}", "disconnected");
 }
@@ -59,16 +85,3 @@ async fn main() {
 
 }
 
-// #[tokio::main]
-// async fn main() -> Result <(), Box<dyn Error>> {
-//     let mut stream= TcpStream::connect("127.0.0.1:1984").await?;
-//     let mut b2 = [0; 10];
-//     let (mut rx, tx) = stream.split();
-//     let n = tx.try_write(b"g perro").unwrap();
-//     let a = rx.peek(&mut b2).await?;
-//     let p = rx.read(&mut b2[..n]).await?;
-//     println!("{:?}", b2);
-    
-//     sleep(Duration::from_millis(5000)).await;
-//     Ok(())
-// }
