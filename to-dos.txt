@@ -1,0 +1,14 @@
+refactor warp-bite 
+
+infinite buffer
+
+handle disconnections
+
+url must be an env variable (use bite- or bitews strategy)
+
+-Investigate rust's profilers (what is the most expensive part of my program)
+
+-bite limitation on message sizes
+-Document k6 test folder
+
+-stress test, zoom calls, every message will be received to everyone
