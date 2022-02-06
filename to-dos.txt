@@ -8,4 +8,6 @@ url must be an env variable (use bite- or bitews strategy)
 
 -bite limitation on message sizes
 
--stress test, zoom calls, every message will be received to everyone
+-stress test, zoom calls, every message will be received to everyone 
+
+-what should be registered in tests
