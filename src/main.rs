@@ -1,11 +1,11 @@
-use std::error::Error;
 use futures::future::ok;
+use std::error::Error;
+use std::io::ErrorKind::{BrokenPipe, Interrupted, WouldBlock};
 use tokio::time::{sleep, Duration};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpStream,
 };
-use std::io::ErrorKind::{BrokenPipe, Interrupted, WouldBlock};
 
 use futures::channel::mpsc;
 use futures::{FutureExt, StreamExt};
@@ -94,7 +94,6 @@ pub async fn client_connection(ws: WebSocket) {
             println!("Bite got disconnected");
         }
     }
-
 
     //disconnects user
     println!("{}", "disconnected");
