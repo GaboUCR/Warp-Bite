@@ -5,13 +5,21 @@ Install [K6](https://k6.io/docs/getting-started/installation/).
 
 Follow the instructions of the test you want to run.
 
+Every test runs 1000 scripts in parallel. 
+
 ## Tests
 
-### General-test 
+### general-test 
 Attempts to test every feature of rust in a random simulation.
 
 ```
-k6 run --vus 10 general-test.js
+k6 run general-test.js
 ```
 
-This command runs 10 scripts in parallel, change the vus command according to your needs. 
+### zoom-call.js 
+Creates 1000 channels and subscribes all clients. Clients write a message in a range of 200ms to 500ms.
+
+```
+k6 run zoom-call.js
+```
+
