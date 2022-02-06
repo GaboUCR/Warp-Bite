@@ -1,6 +1,6 @@
 refactor warp-bite 
 
-infinite buffer
+what is the best strategy to read infinite buffers (bite strategy??)
 
 handle disconnections
 
