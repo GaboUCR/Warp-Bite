@@ -17,6 +17,7 @@ type Result<T> = std::result::Result<T, Rejection>;
 pub async fn client_connection(ws: WebSocket) {
     let (client_ws_sender, mut client_ws_rcv) = ws.split();
 
+    //if connection fails re attempt 
     let mut stream = TcpStream::connect("127.0.0.1:1984").await.expect("bite connection refused :<");
     let (mut byte_rx, mut byte_tx) = stream.into_split();
 

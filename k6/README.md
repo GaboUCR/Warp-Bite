@@ -16,10 +16,10 @@ Attempts to test every feature of rust in a random simulation.
 k6 run general-test.js
 ```
 
-### zoom-call.js 
-Creates 1000 channels and subscribes all clients. Clients write a message in a range of 200ms to 500ms.
+### chat.js 
+Subscribes all clients to one channel. Clients write a message in a range of 200ms to 500ms.
 
 ```
-k6 run zoom-call.js
+k6 run chat.js
 ```
 
