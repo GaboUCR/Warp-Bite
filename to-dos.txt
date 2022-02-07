@@ -11,3 +11,7 @@ url must be an env variable (use bite- or bitews strategy)
 -stress test, zoom calls, every message will be received to everyone 
 
 -what should be registered in tests
+
+-error logging for Bite and Warp-Bite, we should know what is wrong
+
+-tokio console

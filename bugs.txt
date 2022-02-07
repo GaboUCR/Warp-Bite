@@ -1,5 +1,5 @@
 -on k6 test if I close bite warp-bite doesn't close.
 
--when you open a ton of connections very quickly Bite send an error.
+-when you open a ton of connections very quickly Bite refuses connections.
 
 -Large messages do not work bug. (2)
