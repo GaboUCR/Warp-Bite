@@ -8,8 +8,8 @@ function getRandomInt(max) {
 }
 
 export const options = {
-    vus: 1000,
-    iterations: 1000,
+    vus: 10,
+    iterations: 10,
 };
 
 export default function () {
