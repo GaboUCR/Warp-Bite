@@ -17,8 +17,10 @@ type Result<T> = std::result::Result<T, Rejection>;
 pub async fn client_connection(ws: WebSocket) {
     let (client_ws_sender, mut client_ws_rcv) = ws.split();
 
-    //if connection fails re attempt 
-    let mut stream = TcpStream::connect("127.0.0.1:1984").await.expect("bite connection refused :<");
+    //if connection fails re attempt
+    let mut stream = TcpStream::connect("127.0.0.1:1984")
+        .await
+        .expect("bite connection refused :<");
     let (mut byte_rx, mut byte_tx) = stream.into_split();
 
     let (client_sender, client_rcv) = mpsc::unbounded();
@@ -111,6 +113,9 @@ pub async fn ws_handler(ws: warp::ws::Ws) -> Result<impl Reply> {
 
 #[tokio::main]
 async fn main() {
+    //enable tokio console
+    console_subscriber::init();
+
     let ws_route = warp::path("ws").and(warp::ws()).and_then(ws_handler);
 
     println!("{}", "listening on port 8000");
