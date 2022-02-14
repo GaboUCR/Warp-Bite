@@ -4,6 +4,27 @@
 Lost 133 connections at the beginning (timeout error).
 The same thing happen on large messages.
 
+## no messages, 1000 clients:
+lost 185 connections at the beginning (timeout error).
+
 ## 1 character message 10s - 30s, no subs, 500 clients:
 
+Worked perfectly.
+
+![Capture](https://user-images.githubusercontent.com/69367406/153915014-ce4f5151-627c-466f-98f3-e09f8bbbc97a.PNG)
+
+## 1 character message 10s - 30s, no subs, 600 clients:
+Lost 104 connections. Error message:
+
+![Capture1](https://user-images.githubusercontent.com/69367406/153917554-cae77ad4-a28e-4c3b-8ecf-db3513d6f46f.PNG)
+
+Stabilized at 506:
+
+![2](https://user-images.githubusercontent.com/69367406/153918205-080baa2e-e2fc-4adb-8893-536afa1eb578.PNG)
+
+## 1 character message 10s - 30s, no subs, 550 clients:
+
+Lost 48 connections due to To Many open files error.
+
+## 
 
