@@ -1,6 +1,7 @@
 use futures::future::ok;
 use std::error::Error;
 use std::io::ErrorKind::{BrokenPipe, Interrupted, WouldBlock};
+use std::net::TcpListener;
 use tokio::time::{sleep, Duration};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -9,19 +10,37 @@ use tokio::{
 
 use futures::channel::mpsc;
 use futures::{FutureExt, StreamExt};
+use std::io::Result;
 use warp::ws::{Message, WebSocket};
 use warp::{Filter, Rejection, Reply};
 
-type Result<T> = std::result::Result<T, Rejection>;
+type WarpResult<T> = std::result::Result<T, Rejection>;
+
+pub async fn bite_connect() -> Result<TcpStream> {
+    let mut connection_attempts = 1;
+
+    loop {
+        match TcpStream::connect("127.0.0.1:1984").await {
+            Ok(stream) => return Ok(stream),
+
+            Err(e) => {
+                if connection_attempts > 12 {
+                    return Err(e.into());
+                }
+            }
+        }
+        sleep(Duration::new(connection_attempts, 0)).await;
+        connection_attempts += 1;
+    }
+}
 
 pub async fn client_connection(ws: WebSocket) {
     let (client_ws_sender, mut client_ws_rcv) = ws.split();
 
-    //if connection fails re attempt
-    let mut stream = TcpStream::connect("127.0.0.1:1984")
-        .await
-        .expect("bite connection refused :<");
-    let (mut byte_rx, mut byte_tx) = stream.into_split();
+    //if connection fails re attempts up to 78 seconds
+    let mut stream = bite_connect().await.unwrap();
+
+    let (byte_rx, byte_tx) = stream.into_split();
 
     let (client_sender, client_rcv) = mpsc::unbounded();
 
@@ -102,7 +121,7 @@ pub async fn client_connection(ws: WebSocket) {
     println!("{}", "disconnected");
 }
 
-pub async fn ws_handler(ws: warp::ws::Ws) -> Result<impl Reply> {
+pub async fn ws_handler(ws: warp::ws::Ws) -> WarpResult<impl Reply> {
     // this is where user authentication will happen
     let client = Some(1);
     match client {
@@ -114,7 +133,7 @@ pub async fn ws_handler(ws: warp::ws::Ws) -> Result<impl Reply> {
 #[tokio::main]
 async fn main() {
     //enable tokio console
-    console_subscriber::init();
+    // console_subscriber::init();
 
     let ws_route = warp::path("ws").and(warp::ws()).and_then(ws_handler);
 
