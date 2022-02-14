@@ -1,3 +1,5 @@
+-test wsbite, bite alone, 
+
 -what is the best strategy to read infinite buffers (bite strategy??)
 
 -url must be an env variable (use bite- or bitews strategy)

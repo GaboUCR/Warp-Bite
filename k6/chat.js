@@ -8,8 +8,8 @@ function getRandomInt(max) {
 }
 
 export const options = {
-    vus: 10,
-    iterations: 10,
+    vus: 1000,
+    iterations: 1000,
 };
 
 export default function () {
@@ -25,7 +25,7 @@ export default function () {
             //     socket.send("#b " + i.toString())
 
             // }
-            socket.send("#b perro")
+            socket.send("#g perro")
 
             socket.setInterval(function timeout() {
 
@@ -37,7 +37,7 @@ export default function () {
             }, randomIntBetween(200, 500)); //write once every 200ms - 500ms
 
 socket.on('message', function (message) {
-    let i =0 
+    let i = 0 
     // console.log("new message: \n" + message)
 
 });
