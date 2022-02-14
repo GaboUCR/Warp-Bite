@@ -6,12 +6,25 @@ The same thing happen on large messages.
 
 ## no messages, 1000 clients:
 lost 185 connections at the beginning (timeout error).
+Lost more than 300, to many open files error.
+Stabilized at 506.
 
 ## 1 character message 10s - 30s, no subs, 500 clients:
 
 Worked perfectly.
 
 ![Capture](https://user-images.githubusercontent.com/69367406/153915014-ce4f5151-627c-466f-98f3-e09f8bbbc97a.PNG)
+
+## 1024 character message 1s, no subs, 500 clients:
+Worked perfectly
+
+![Capture](https://user-images.githubusercontent.com/69367406/153964917-84c77f6e-60c6-47a3-ac31-afeb17080578.PNG)
+
+## 12 character message 16ms, 1 sub for everyone, 500 clients:
+Worked perfectly.
+
+![Capture](https://user-images.githubusercontent.com/69367406/153966806-fa0825f9-c403-4ac9-9545-2d0447fd30c7.PNG)
+
 
 ## 1 character message 10s - 30s, no subs, 600 clients:
 Lost 104 connections. Error message:
