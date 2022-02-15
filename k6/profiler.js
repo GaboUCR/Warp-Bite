@@ -15,7 +15,7 @@ export const options = {
 export default function () {
 
     const message = randomString(12)
-    
+
     const res = ws.connect('ws://localhost:8000/ws', null, function (socket) {
 
         socket.on('open', function open() {
@@ -23,16 +23,24 @@ export default function () {
             console.log("connected");
 
             socket.send("#g perro")
+            let i = 0
 
-            socket.setInterval(function timeout() {
-                
+            socket.setTimeout(function () {
+
                 socket.send("s perro " + message)
 
-            }, 16); 
+                i += 1
+                if (i === 1000) {
+                    sleep(10)
+                    socket.close()
+                }
+
+
+            }, 1000)
 
             socket.on('message', function (message) {
-               let i = 3
-                // console.log("new message: \n" + message)
+
+                console.log("new message: \n" + message)
 
             });
 
@@ -47,7 +55,7 @@ export default function () {
 
                 socket.close();
 
-            }, 1000 * 600);
+            }, 1000 * 120);
 
         });
     })
