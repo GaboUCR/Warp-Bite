@@ -2,6 +2,7 @@ use warp::{Filter, Rejection, Reply};
 mod handler;
 use thiserror::Error;
 type WarpResult<T> = std::result::Result<T, Rejection>;
+use warp::http::header::{HeaderMap, HeaderValue};
 
 const API_TOKEN: &str = "6smtr8ke3s7yq63f3zug9z3th";
 
@@ -27,11 +28,12 @@ async fn ensure_authentication() -> impl Filter<Extract = (String,), Error = war
         |cookie_header: Option<String>| async move {
             if let Some(header) = cookie_header {
                 let parts: Vec<&str> = header.split("=").collect();
+                println!("{:?}", parts);
                 if parts.len() == 2 && parts[0] == "token" && parts[1] == API_TOKEN {
                     return Ok("Existing user".to_string());
                 }
             }
-    
+
             Err(warp::reject::custom(ApiErrors::NotAuthorized (
                 "not authorized".to_string(),
             )))
@@ -43,12 +45,17 @@ async fn ensure_authentication() -> impl Filter<Extract = (String,), Error = war
 async fn main() {
     //enable tokio console
     // console_subscriber::init();
+    let mut headers = HeaderMap::new();
+    headers.insert("set-cookie", HeaderValue::from_static("token=6smtr8ke3s7yq63f3zug9z3th; path=/"));
+
+    let register = warp::path("static").and(warp::fs::dir("./static")).with(warp::reply::with::headers(headers));
 
     let ws_route = warp::path("ws")
         .and(ensure_authentication().await)
         .and(warp::ws())
         .and_then(ws_handler);
 
+    let routes = register.or(ws_route);
     println!("{}", "listening on port 8000");
-    warp::serve(ws_route).run(([127, 0, 0, 1], 8000)).await;
+    warp::serve(routes).run(([127, 0, 0, 1], 8000)).await;
 }
