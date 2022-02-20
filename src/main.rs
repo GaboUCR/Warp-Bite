@@ -1,9 +1,19 @@
 use warp::{Filter, Rejection, Reply};
 mod handler;
-
+use thiserror::Error;
 type WarpResult<T> = std::result::Result<T, Rejection>;
 
-pub async fn ws_handler(ws: warp::ws::Ws) -> WarpResult<impl Reply> {
+const API_TOKEN: &str = "6smtr8ke3s7yq63f3zug9z3th";
+
+#[derive(Error, Debug)]
+enum ApiErrors {
+    #[error("user not authorized")]
+    NotAuthorized(String),
+}
+
+impl warp::reject::Reject for ApiErrors {}
+
+pub async fn ws_handler(user:String, ws: warp::ws::Ws) -> WarpResult<impl Reply> {
     // this is where user authentication will happen
     let client = Some(1);
     match client {
@@ -12,12 +22,32 @@ pub async fn ws_handler(ws: warp::ws::Ws) -> WarpResult<impl Reply> {
     }
 }
 
+async fn ensure_authentication() -> impl Filter<Extract = (String,), Error = warp::reject::Rejection> + Clone {
+    warp::header::optional::<String>("cookie").and_then(
+        |cookie_header: Option<String>| async move {
+            if let Some(header) = cookie_header {
+                let parts: Vec<&str> = header.split("=").collect();
+                if parts.len() == 2 && parts[0] == "token" && parts[1] == API_TOKEN {
+                    return Ok("Existing user".to_string());
+                }
+            }
+    
+            Err(warp::reject::custom(ApiErrors::NotAuthorized (
+                "not authorized".to_string(),
+            )))
+        },
+    )
+}
+
 #[tokio::main]
 async fn main() {
     //enable tokio console
     // console_subscriber::init();
 
-    let ws_route = warp::path("ws").and(warp::ws()).and_then(ws_handler);
+    let ws_route = warp::path("ws")
+        .and(ensure_authentication().await)
+        .and(warp::ws())
+        .and_then(ws_handler);
 
     println!("{}", "listening on port 8000");
     warp::serve(ws_route).run(([127, 0, 0, 1], 8000)).await;
