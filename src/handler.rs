@@ -13,18 +13,18 @@ pub async fn client_connection(ws: WebSocket) {
     let stream = bite_connect().await.unwrap();
 
     let (byte_rx, byte_tx) = stream.into_split();
-
+    //@todo use tx rx
     let (client_sender, client_rcv) = mpsc::unbounded();
 
     // check for new messages from Bite
     let bite_read_handler = tokio::task::spawn(async move {
         loop {
-            let mut b2 = [0; 100];
+            let mut buffer = [0; 100];
             let _success = byte_rx.readable().await;
 
             //Saves bite's response on b2 buffer
 
-            let p = byte_rx.try_read(&mut b2);
+            let p = byte_rx.try_read(&mut buffer);
 
             match p {
                 Ok(i) => {
@@ -33,7 +33,7 @@ pub async fn client_connection(ws: WebSocket) {
                     if i == 0 {
                         break;
                     }
-                    let s = String::from_utf8_lossy(&b2);
+                    let s = String::from_utf8_lossy(&buffer);
                     let _success = client_sender.unbounded_send(Ok(Message::text(s)));
                 }
                 Err(ref err) if err.kind() == WouldBlock => continue,

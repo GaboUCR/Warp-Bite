@@ -29,6 +29,7 @@ async fn ensure_authentication() -> impl Filter<Extract = (String,), Error = war
             if let Some(header) = cookie_header {
                 let parts: Vec<&str> = header.split("=").collect();
                 println!("{:?}", parts);
+                //@to-do Fails if we send several parts
                 if parts.len() == 2 && parts[0] == "token" && parts[1] == API_TOKEN {
                     return Ok("Existing user".to_string());
                 }
