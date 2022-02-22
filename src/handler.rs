@@ -18,31 +18,45 @@ pub async fn client_connection(ws: WebSocket) {
 
     // check for new messages from Bite
     let bite_read_handler = tokio::task::spawn(async move {
-        loop {
-            let mut buffer = [0; 100];
+        let mut not_done = true;
+
+        while not_done {
+            let mut buffer = vec![0; 1024];
+            let mut bytes_read = 0;
+
             let _success = byte_rx.readable().await;
 
-            //Saves bite's response on b2 buffer
+            loop {
+                let p = byte_rx.try_read(&mut buffer);
 
-            let p = byte_rx.try_read(&mut buffer);
+                match p {
+                    Ok(i) => {
+                        // Reading 0 bytes means the other side has closed the
+                        // connection or is done writing, then so are we.
+                        if i == 0 {
+                            not_done = false;
+                            break;
+                        }
+                        bytes_read += i;
 
-            match p {
-                Ok(i) => {
-                    // Reading 0 bytes means the other side has closed the
-                    // connection or is done writing, then so are we.
-                    if i == 0 {
+                        if bytes_read == buffer.len() {
+                            buffer.resize(buffer.len() + 1024, 0);
+                        }
+
+                        let msg = String::from_utf8_lossy(&buffer);
+                        let _success = client_sender.unbounded_send(Ok(Message::text(msg)));
+                    }
+                    Err(ref err) if err.kind() == WouldBlock => break,
+
+                    Err(ref err) if err.kind() == Interrupted => continue,
+
+                    // Other errors we'll consider fatal.
+                    Err(_err) => {
+                        not_done = false;
                         break;
                     }
-                    let s = String::from_utf8_lossy(&buffer);
-                    let _success = client_sender.unbounded_send(Ok(Message::text(s)));
-                }
-                Err(ref err) if err.kind() == WouldBlock => continue,
-
-                Err(ref err) if err.kind() == Interrupted => continue,
-
-                // Other errors we'll consider fatal.
-                Err(_err) => break,
-            };
+                };
+            }
         }
     });
 
@@ -70,7 +84,13 @@ pub async fn client_connection(ws: WebSocket) {
 
             match n_bytes {
                 Ok(_i) => continue,
-                Err(e) => println!("Unable to write {}", e),
+
+                Err(ref err) if err.kind() == WouldBlock => continue,
+
+                Err(ref err) if err.kind() == Interrupted => continue,
+
+                // Other errors we'll consider fatal.
+                Err(_e) => break,
             };
         }
     });

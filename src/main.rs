@@ -14,7 +14,7 @@ enum ApiErrors {
 
 impl warp::reject::Reject for ApiErrors {}
 
-pub async fn ws_handler(user:String, ws: warp::ws::Ws) -> WarpResult<impl Reply> {
+pub async fn ws_handler(ws: warp::ws::Ws) -> WarpResult<impl Reply> {
     // this is where user authentication will happen
     let client = Some(1);
     match client {
@@ -51,10 +51,9 @@ async fn main() {
 
     let register = warp::path("static").and(warp::fs::dir("./static")).with(warp::reply::with::headers(headers));
 
-    let ws_route = warp::path("ws")
-        .and(ensure_authentication().await)
-        .and(warp::ws())
-        .and_then(ws_handler);
+    let ws_route = warp::path("ws").and(warp::ws()).and_then(ws_handler);
+        // .and(ensure_authentication().await)
+
 
     let routes = register.or(ws_route);
     println!("{}", "listening on port 8000");
