@@ -1,6 +1,8 @@
 use futures::channel::mpsc;
 use futures::{FutureExt, StreamExt};
 use std::io::ErrorKind::{Interrupted, WouldBlock};
+use std::env;
+use std::process::exit;
 use std::io::Result;
 use tokio::net::TcpStream;
 use tokio::time::{sleep, Duration};
@@ -9,12 +11,22 @@ use warp::ws::{Message, WebSocket};
 pub async fn client_connection(ws: WebSocket) {
     let (client_ws_sender, mut client_ws_rcv) = ws.split();
 
+    let bite_uri  = match env::var("BITE") {
+        Ok(v) => v,
+        Err(_) => {
+            println!("Environmental variable BITE is missing!");
+            println!("The URI where Bite is gonna receive connections.");
+            println!("BASH i.e: export BITE=0.0.0.0:1984");
+            exit(1);
+        }
+    };
+
     //if connection fails re attempts up to 78 seconds
-    let stream = bite_connect().await.unwrap();
+    let stream = tcp_connect(&bite_uri).await.unwrap();
 
     let (byte_rx, byte_tx) = stream.into_split();
     //@todo use tx rx
-    let (client_sender, client_rcv) = mpsc::unbounded();
+    let (client_tx, client_rx) = mpsc::unbounded();
 
     // check for new messages from Bite
     let bite_read_handler = tokio::task::spawn(async move {
@@ -44,7 +56,7 @@ pub async fn client_connection(ws: WebSocket) {
                         }
 
                         let msg = String::from_utf8_lossy(&buffer);
-                        let _success = client_sender.unbounded_send(Ok(Message::text(msg)));
+                        let _success = client_tx.unbounded_send(Ok(Message::text(msg)));
                     }
                     Err(ref err) if err.kind() == WouldBlock => break,
 
@@ -60,7 +72,7 @@ pub async fn client_connection(ws: WebSocket) {
         }
     });
 
-    let bite_proxy = tokio::task::spawn(client_rcv.forward(client_ws_sender).map(|result| {
+    let bite_proxy = tokio::task::spawn(client_rx.forward(client_ws_sender).map(|result| {
         //this task is ended when bite_read_handler ends
         if let Err(e) = result {
             eprintln!("error sending websocket msg: {}", e);
@@ -114,11 +126,11 @@ pub async fn client_connection(ws: WebSocket) {
     println!("{}", "disconnected");
 }
 
-pub async fn bite_connect() -> Result<TcpStream> {
+pub async fn tcp_connect(tcp_uri:&str) -> Result<TcpStream> {
     let mut connection_attempts = 1;
 
     loop {
-        match TcpStream::connect("127.0.0.1:1984").await {
+        match TcpStream::connect(tcp_uri).await {
             Ok(stream) => return Ok(stream),
 
             Err(e) => {

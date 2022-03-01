@@ -2,6 +2,8 @@ use warp::{Filter, Rejection, Reply};
 mod handler;
 use thiserror::Error;
 type WarpResult<T> = std::result::Result<T, Rejection>;
+use std::env;
+use std::process::exit;
 use warp::http::header::{HeaderMap, HeaderValue};
 
 const API_TOKEN: &str = "6smtr8ke3s7yq63f3zug9z3th";
@@ -46,16 +48,27 @@ async fn ensure_authentication() -> impl Filter<Extract = (String,), Error = war
 async fn main() {
     //enable tokio console
     // console_subscriber::init();
-    let mut headers = HeaderMap::new();
-    headers.insert("set-cookie", HeaderValue::from_static("token=6smtr8ke3s7yq63f3zug9z3th; path=/"));
+    // let mut headers = HeaderMap::new();
+    // headers.insert("set-cookie", HeaderValue::from_static("token=6smtr8ke3s7yq63f3zug9z3th; path=/"));
+    
+    // not compatible with warp::server::run
+    // let server_uri = match env::var("SERVER") {
+    //     Ok(v) => v,
+    //     Err(_) => {
+    //         println!("Environmental variable SERVER is missing!");
+    //         println!("That's the uri where the server runs");
+    //         println!("BASH i.e: export SERVER=0.0.0.0:8000");
+    //         exit(1);
+    //     }
+    // };
 
-    let register = warp::path("static").and(warp::fs::dir("./static")).with(warp::reply::with::headers(headers));
+    let register = warp::path("static").and(warp::fs::dir("./static")); //.with(warp::reply::with::headers(headers));
 
     let ws_route = warp::path("ws").and(warp::ws()).and_then(ws_handler);
         // .and(ensure_authentication().await)
 
-
     let routes = register.or(ws_route);
     println!("{}", "listening on port 8000");
     warp::serve(routes).run(([127, 0, 0, 1], 8000)).await;
+    // warp::serve(routes).run(server_uri).await;
 }
