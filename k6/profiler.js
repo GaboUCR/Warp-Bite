@@ -25,22 +25,16 @@ export default function () {
             socket.send("#g perro")
             let i = 0
 
-            socket.setTimeout(function () {
+            socket.setInterval(function timeout () {
 
                 socket.send("s perro " + message)
-
-                i += 1
-                if (i === 1000) {
-                    sleep(10)
-                    socket.close()
-                }
-
 
             }, 1000)
 
             socket.on('message', function (message) {
-
-                console.log("new message: \n" + message)
+                i += 1
+                console.log(i)
+                // console.log("new message: \n" + message)
 
             });
 

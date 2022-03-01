@@ -8,8 +8,8 @@ function getRandomInt(max) {
 }
 
 export const options = {
-  vus: 1000,
-  iterations: 1000,
+  vus: 500,
+  iterations: 500,
 };
 
 export default function () {
@@ -39,7 +39,7 @@ export default function () {
           let rand_msg_lenght = getRandomInt(100)
 
           let msg_lenght = randomIntBetween(512, 1024)
-          socket.send("s "+rand_channel.toString()+" "+randomString(msg_lenght))
+          socket.send("s "+rand_channel.toString()+" "+randomString(msg_lenght)+"patito")
 
           // //20 percent change of a large message betweem 5 Mb and 500Mb
           // if (0 <= rand_msg_lenght && rand_msg_lenght <= 19) {
